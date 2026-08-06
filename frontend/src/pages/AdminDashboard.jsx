@@ -3,13 +3,31 @@ import API from '../api'
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null)
+  const [candidateName, setCandidateName] = useState('')
+const [seatId, setSeatId] = useState('1')
+const [seatName, setSeatName] = useState('')
+const [seats, setSeats] = useState([])
   const user = JSON.parse(localStorage.getItem('user'))
 
-  useEffect(() => {
-    API.get('/admin/stats')
-      .then((res) => setStats(res.data))
-      .catch((err) => console.error(err))
-  }, [])
+useEffect(() => {
+  // Load dashboard statistics
+  API.get('/admin/stats')
+    .then((res) => setStats(res.data))
+    .catch((err) => console.error(err))
+
+  // Load all seats from the database
+  API.get('/admin/seats')
+    .then((res) => {
+      console.log('Seats:', res.data)
+      setSeats(res.data)
+
+      // Set first seat as default
+      if (res.data.length > 0) {
+        setSeatId(res.data[0].id.toString())
+      }
+    })
+    .catch((err) => console.error(err))
+}, [])
 
   const logout = () => {
     localStorage.removeItem('token')
@@ -23,6 +41,36 @@ export default function AdminDashboard() {
     { title: 'Election Seats', value: stats?.seats || 0, color: 'bg-purple-500', icon: '🏛️' },
     { title: 'Candidates', value: stats?.candidates || 0, color: 'bg-orange-500', icon: '🎯' },
   ]
+const addCandidate = async (e) => {
+  e.preventDefault()
+
+  try {
+    await API.post('/admin/candidate', {
+      seat_id: Number(seatId),
+      candidate_name: candidateName
+    })
+
+    alert('Candidate added successfully!')
+    setCandidateName('')
+  } catch (err) {
+    alert(err.response?.data?.error || 'Failed to add candidate')
+  }
+}
+
+const addSeat = async (e) => {
+  e.preventDefault()
+
+  try {
+    await API.post('/admin/seat', {
+      seat_name: seatName
+    })
+
+    alert('Seat created successfully!')
+    setSeatName('')
+  } catch (err) {
+    alert(err.response?.data?.error || 'Failed to create seat')
+  }
+}
 
   return (
     <div className="min-h-screen bg-slate-100 flex">
@@ -107,6 +155,44 @@ export default function AdminDashboard() {
             >
               ➕ Manage Candidates
             </button>
+            <div className="mt-6 border-t pt-6">
+  <h3 className="text-lg font-semibold mb-4">🪑 Create New Seat</h3>
+
+ <form
+  onSubmit={addCandidate}
+  className="flex flex-col md:flex-row gap-4 w-full"
+>
+  {/* Seat dropdown */}
+  <select
+    value={seatId}
+    onChange={(e) => setSeatId(e.target.value)}
+    className="border border-slate-300 rounded-lg px-4 py-3 w-full md:w-48 bg-white"
+  >
+    {seats.map((seat) => (
+      <option key={seat.id} value={seat.id}>
+        {seat.seat_name}
+      </option>
+    ))}
+  </select>
+
+  {/* Candidate name input */}
+  <input
+    type="text"
+    placeholder="Enter candidate name"
+    value={candidateName}
+    onChange={(e) => setCandidateName(e.target.value)}
+    className="border border-slate-300 rounded-lg px-4 py-3 flex-1 min-w-[220px] bg-white"
+  />
+
+  {/* Submit button */}
+  <button
+    type="submit"
+    className="bg-purple-600 hover:bg-purple-700 text-white rounded-lg px-6 py-3 font-medium transition whitespace-nowrap"
+  >
+    Add Candidate
+  </button>
+</form>
+</div>
           </div>
         </div>
       </main>
