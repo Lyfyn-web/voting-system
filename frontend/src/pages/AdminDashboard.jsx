@@ -13,21 +13,21 @@ useEffect(() => {
   // Load dashboard statistics
   API.get('/admin/stats')
     .then((res) => setStats(res.data))
-    .catch((err) => console.error(err))
+    .catch((err) => console.error(err));
 
-  // Load all seats from the database
+  // Load seats for dropdown
   API.get('/admin/seats')
     .then((res) => {
-      console.log('Seats:', res.data)
-      setSeats(res.data)
+      const validSeats = res.data.filter((s) => s.seat_name);
 
-      // Set first seat as default
-      if (res.data.length > 0) {
-        setSeatId(res.data[0].id.toString())
+      setSeats(validSeats);
+
+      if (validSeats.length > 0) {
+        setSeatId(String(validSeats[0].id));
       }
     })
-    .catch((err) => console.error(err))
-}, [])
+    .catch((err) => console.error(err));
+}, []);
 
   const logout = () => {
     localStorage.removeItem('token')
@@ -155,18 +155,44 @@ const addSeat = async (e) => {
             >
               ➕ Manage Candidates
             </button>
-            <div className="mt-6 border-t pt-6">
-  <h3 className="text-lg font-semibold mb-4">🪑 Create New Seat</h3>
+<div className="mt-8 border-t border-slate-200 pt-6 space-y-8">
+  {/* CREATE SEAT */}
+  <div className="space-y-3">
+    <h3 className="text-lg font-semibold flex items-center gap-2 text-slate-800">
+      🪑 Create New Seat
+    </h3>
 
- <form
-  onSubmit={addCandidate}
-  className="flex flex-col md:flex-row gap-4 w-full"
->
-  {/* Seat dropdown */}
+    <form onSubmit={addSeat} className="flex flex-col sm:flex-row gap-3">
+      <input
+        type="text"
+        placeholder="Enter seat name"
+        value={seatName}
+        onChange={(e) => setSeatName(e.target.value)}
+        className="flex-1 border border-slate-300 rounded-lg px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+
+      <button
+        type="submit"
+        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition whitespace-nowrap"
+      >
+        Create Seat
+      </button>
+    </form>
+  </div>
+
+  {/* ADD CANDIDATE */}
+  <div className="space-y-3">
+    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-slate-800">
+  ➕ Add Candidate
+</h3>
+
+<div className="w-full overflow-x-auto">
+  </div>
+<form onSubmit={addCandidate} className="flex items-center gap-4 flex-wrap">
   <select
     value={seatId}
     onChange={(e) => setSeatId(e.target.value)}
-    className="border border-slate-300 rounded-lg px-4 py-3 w-full md:w-48 bg-white"
+    className="w-56 h-12 border border-slate-300 rounded-lg px-3 bg-white text-black text-sm cursor-pointer"
   >
     {seats.map((seat) => (
       <option key={seat.id} value={seat.id}>
@@ -175,27 +201,29 @@ const addSeat = async (e) => {
     ))}
   </select>
 
-  {/* Candidate name input */}
   <input
     type="text"
     placeholder="Enter candidate name"
     value={candidateName}
     onChange={(e) => setCandidateName(e.target.value)}
-    className="border border-slate-300 rounded-lg px-4 py-3 flex-1 min-w-[220px] bg-white"
+    className="w-80 h-12 border border-slate-300 rounded-xl px-4 bg-white text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
   />
 
-  {/* Submit button */}
   <button
     type="submit"
-    className="bg-purple-600 hover:bg-purple-700 text-white rounded-lg px-6 py-3 font-medium transition whitespace-nowrap"
+    className="bg-purple-600 hover:bg-purple-700 text-white rounded-xl px-6 h-12 font-medium transition whitespace-nowrap"
   >
     Add Candidate
   </button>
 </form>
 </div>
+</div>
+
+
           </div>
         </div>
       </main>
     </div>
-  )
+    
+  );
 }
